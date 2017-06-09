@@ -5,7 +5,6 @@ void hello();
 int main(void)
 {
 	hello();
-	hello();
 	return 0;
 }
 
