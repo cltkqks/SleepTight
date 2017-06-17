@@ -12,5 +12,6 @@ void hello()
 {
 	printf("HELLO WORLD!\n");
     printf("Hello everyone!\n");
+    printf("Mac_Xcode...");
 	
 }
