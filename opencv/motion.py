@@ -41,7 +41,7 @@ def motionDetect(): # 일정시간동안 움직임을 감지해서 결과를 리
             return True #움직임이 검출됨 True 리턴
         
 
-        if conut > #숫자: #일정 시간동안 frame를 검사하고 종료
+        if count > #숫자: #일정 시간동안 frame를 검사하고 종료
             break
 
     camera.release() #cleanup the camera
