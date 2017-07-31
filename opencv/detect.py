@@ -14,6 +14,7 @@ GPIO.setmode(GPIO.BCM)
 """
 #조도센서 값을 읽어오는 함수
 #빛이 있으면 300, 어두워지면 1000 이상을 리턴
+#+:1 -:6(그라운드) GPIO핀:7(cds와 커페시터 사이)
 def light(pin):
     count = 0
 
