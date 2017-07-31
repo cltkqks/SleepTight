@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*- 
 #수면 감지 모듈
 
 import RPi.GPIO as GPIO
 import time
 
+
+GPIO.setmode(GPIO.BCM)
 #조도센서 값을 읽어오는 함수
 #빛이 있으면 300, 어두워지면 1000 이상을 리턴
 def light(pin):
@@ -22,4 +25,6 @@ def light(pin):
 
     return count
 
-
+#GPIO 초기화
+def clean():
+    GPIO.cleanup()
