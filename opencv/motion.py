@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #모션 감지
 
 import numpy as np
