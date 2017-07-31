@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*- 
 #테스트 영상을 만들기 위한 코드
 #촬영을 끝내기위해서는 esc 키를 누르면 됨
+#그레이 스케일로 저장
 import numpy as np
 import cv2
 import os
@@ -35,8 +36,10 @@ def writeVideo():
             print('video read error')
             break
 
-        cv2.imshow('video', frame)
-        out.write(frame)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+        cv2.imshow('video', gray2)
+        out.write(gray2)
 
         k = cv2.waitKey(1) & 0xFF
         if k == 27:
