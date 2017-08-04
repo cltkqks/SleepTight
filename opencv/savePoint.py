@@ -44,7 +44,7 @@ def onMouse(event, x, y, flags, param):
                 return
         
 def backSubtraction(roi):  # 차영상을 구해 리턴하는 함수
-
+        
     ret, roi = cap.read()  #ret: 프레임 캡쳐 결과, frame: 캡쳐한 프레임
     fgmask = mog.apply(roi)   #배경제거
     fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)  #차영상의 노이즈 제거
@@ -53,6 +53,7 @@ def backSubtraction(roi):  # 차영상을 구해 리턴하는 함수
 
 
 def readFile():
+        global col, row, width, height 
         f = open('savePoint', 'r')
         col = int(f.readline())
         row = int(f.readline())
