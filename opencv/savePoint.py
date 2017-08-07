@@ -35,7 +35,7 @@ def onMouse(event, x, y, flags, param):
                         inputmode = False
                         rectangle = False
                         cv2.rectangle(frame,(col,row),(x,y),(0,255,0),2)
-                        height, width = abs(row-y), abs(col-x)
+                        height, width = abs(y-row), abs(x-col)
                         trackWindow = (col,row,width,height)
                         sp = open('savePoint.txt','w')
                         a = [str(col), str(row),str(x), str(y)]
@@ -45,10 +45,10 @@ def onMouse(event, x, y, flags, param):
         
 def backSubtraction(roi):  # 차영상을 구해 리턴하는 함수
         
-    ret, roi = cap.read()  #ret: 프레임 캡쳐 결과, frame: 캡쳐한 프레임
     fgmask = mog.apply(roi)   #배경제거
     fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)  #차영상의 노이즈 제거
-    cv2.imshow('mask', fgmask)
+    cv2.imshow('originalroi', roi) #roi 영상 확인용
+    cv2.imshow('mask', fgmask)     #roi 내 차영상 
     return fgmask
 
 
@@ -61,7 +61,7 @@ def readFile():
         width = int(f.readline())
         height = int(f.readline())
         f.close()
-    except IOError:
+    except IOError: #IOError 오류가 생길때 파일 생성
         f = open('savePoint.txt', 'w')
         a = [str(1), str(1), str(1), str(1)]
         f.write('\n'.join(a))
@@ -80,7 +80,7 @@ def motionDetect():
 
         while True:
                 ret, frame = cap.read()
-                roi = frame[col:col+width,row:row+height]
+                roi = frame[row:row+height, col:col+width] #영상에서 선택한 영역이외는 자름
                 if not ret:
                         break
                 if not os.path.exists('savePoint.txt') or not os.path.getsize('savePoint.txt') > 0:
