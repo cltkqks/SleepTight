@@ -12,8 +12,9 @@ inputmode = False
 rectangle = False
 
 cap=cv2.VideoCapture(0)
-cap.set(3,640)
-cap.set(4,480)
+cap.set(cv2.CAP_PROP_FPS, 10) # fps 설정
+cap.set(3,640) #width 설정
+cap.set(4,480) #heigth 설정
 
 mog = cv2.createBackgroundSubtractorMOG2()   #차영상을 구하기위한 함수 설정
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))  #노이즈 제거를 위한 커널 설정
@@ -38,7 +39,7 @@ def onMouse(event, x, y, flags, param): #마우스 동작 함수 roi 선택용
             height, width = abs(y-row), abs(x-col)
             trackWindow = (col,row,width,height)
             sp = open('savePoint.txt','w')
-            a = [str(col), str(row),str(x), str(y)]
+            a = [str(col), str(row),str(width), str(height)]
             sp.write('\n'.join(a))
             sp.close()
         return
@@ -83,14 +84,7 @@ def motionDetect():
         roi = frame[row:row+height, col:col+width] #영상에서 선택한 영역이외는 자름
         if not ret:
             break
-#파일이 존재 하지 않을시 오류를 제거하는 코드를 readfile 함수에 넣었으므로 아래 코드는 주석처리함
-#                if not os.path.exists('savePoint.txt') or not os.path.getsize('savePoint.txt') > 0:
-#                        inputmode = True
-#                        frame2 = frame.copy()
-#
-#                        while inputmode:
-#                                cv2.imshow('frame1',frame)
-#                                cv2.waitKey(0)
+
         fgmask = backSubtraction(roi)
         _, contours, _ = cv2.findContours(fgmask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # contours를 찾는다
       # count += 1
