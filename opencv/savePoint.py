@@ -37,7 +37,7 @@ def onMouse(event, x, y, flags, param):
                         cv2.rectangle(frame,(col,row),(x,y),(0,255,0),2)
                         height, width = abs(row-y), abs(col-x)
                         trackWindow = (col,row,width,height)
-                        sp = open('savePoint','w')
+                        sp = open('savePoint.txt','w')
                         a = [str(col), str(row),str(x), str(y)]
                         sp.write('\n'.join(a))
                         sp.close()
@@ -53,12 +53,18 @@ def backSubtraction(roi):  # 차영상을 구해 리턴하는 함수
 
 
 def readFile():
-        global col, row, width, height 
-        f = open('savePoint', 'r')
+    global col, row, width, height 
+    try: #파일이 없어 오류 발생시 파일 생성
+        f = open('savePoint.txt', 'r')
         col = int(f.readline())
         row = int(f.readline())
         width = int(f.readline())
         height = int(f.readline())
+        f.close()
+    except IOError:
+        f = open('savePoint.txt', 'w')
+        a = [str(1), str(1), str(1), str(1)]
+        f.write('\n'.join(a))
         f.close()
         
         
@@ -70,13 +76,14 @@ def motionDetect():
         cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
         cv2.namedWindow('frame')
         cv2.setMouseCallback('frame', onMouse, param=(frame,frame2))
+        
 
         while True:
                 ret, frame = cap.read()
                 roi = frame[col:col+width,row:row+height]
                 if not ret:
                         break
-                if not os.path.exists('savePoint') or not os.path.getsize('savePoint') > 0:
+                if not os.path.exists('savePoint.txt') or not os.path.getsize('savePoint.txt') > 0:
                         inputmode = True
                         frame2 = frame.copy()
 
