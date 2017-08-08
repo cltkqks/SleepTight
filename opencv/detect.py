@@ -11,8 +11,9 @@ frame2 = None
 inputmode = False
 rectangle = False
 
+fps = 10  #fps값 설정 변수
 cap=cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FPS, 10) # fps 설정
+cap.set(cv2.CAP_PROP_FPS, fps) # fps 설정
 cap.set(3,640) #width 설정
 cap.set(4,480) #heigth 설정
 
@@ -69,9 +70,12 @@ def readFile():
         f.close()
         
         
-    
-def motionDetect():
-    global frame, frame2, inputmode
+#모션 감지 함수
+#모션 감지 수행하는 시간을 time을 통해 조절할수 있고 
+#모션감지함수를 시간제한없이 동작시키려면 time에 0을 넣어준다    
+def motionDetect(time):
+    global frame, frame2, inputmode, fps
+    count = 0
     ret, frame = cap.read()
     readFile()
     cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
@@ -87,7 +91,7 @@ def motionDetect():
 
         fgmask = backSubtraction(roi)
         _, contours, _ = cv2.findContours(fgmask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # contours를 찾는다
-      # count += 1
+        count += 1
         for c in contours: # 한 프레임의 contour들을 모두 찾아 검사해 움직임을 감지
             if cv2.contourArea(c) < 10000:#범위: #일정한 크기이상의 contours가 없으면 아래는 무시하고 while루프를 돈다
                 continue
@@ -97,8 +101,10 @@ def motionDetect():
         cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
         cv2.imshow('frame', frame)
         k=cv2.waitKey(1)&0xFF
+
         if k==27:
             break
+
         if k==ord('i'):
             print('press any key to start detecting')
             inputmode = True
@@ -107,11 +113,15 @@ def motionDetect():
             while inputmode:
                 cv2.imshow('frame',frame)
                 cv2.waitKey(0)
+
+        if time != 0 and count >= fps*time: #모션감지 동작시간 time값이 0이면 계속 동작
+            break
+
     cap.release()
     cv2.destroyAllWindows()
 
 
 
-motionDetect()
+motionDetect(0)
 
 
