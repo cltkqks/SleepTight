@@ -11,7 +11,7 @@ frame2 = None
 inputmode = False
 rectangle = False
 
-fps = 10  #fps값 설정 변수
+fps = 5  #fps값 설정 변수
 cap=cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FPS, fps) # fps 설정
 cap.set(3,640) #width 설정
@@ -49,7 +49,7 @@ def backSubtraction(roi):  # 차영상을 구해 리턴하는 함수
         
     fgmask = mog.apply(roi)   #배경제거
     fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)  #차영상의 노이즈 제거
-    cv2.imshow('originalroi', roi) #roi 영상 확인용
+    #cv2.imshow('originalroi', roi) #roi 영상 확인용
     cv2.imshow('mask', fgmask)     #roi 내 차영상 
     return fgmask
 
@@ -75,7 +75,8 @@ def readFile():
 #모션감지함수를 시간제한없이 동작시키려면 time에 0을 넣어준다    
 def motionDetect(time):
     global frame, frame2, inputmode, fps
-    count = 0
+    count = 0 #감지시간을 위한 카운터 값
+    number = 0 #일정 시간내 모션 감지 숫자 카운트 
     ret, frame = cap.read()
     readFile()
     cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
@@ -93,19 +94,28 @@ def motionDetect(time):
         _, contours, _ = cv2.findContours(fgmask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # contours를 찾는다
         count += 1
         for c in contours: # 한 프레임의 contour들을 모두 찾아 검사해 움직임을 감지
-            if cv2.contourArea(c) < 10000:#범위: #일정한 크기이상의 contours가 없으면 아래는 무시하고 while루프를 돈다
+            if cv2.contourArea(c) < 10000 or count*fps < 2*fps:#범위: #일정한 크기이상의 contours가 없으면 아래는 무시하고 while루프를 돈다
                 continue
-            else :
+            elif time != 0 : #일정시간내 감지 동작시 
                 print('MD')
+                number += 1 #모션 감지 카운트
+            elif time == 0:
+                print('MD')
+                number += 1
+                if number >= 2:
+                    return True #시간제한 없이 감지 동작-감지 동작하면 리턴
                 
         cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
         cv2.imshow('frame', frame)
         k=cv2.waitKey(1)&0xFF
 
-        if k==27:
-            break
+        if k==27: #ess 키로 강제 종료시
+            print('강제 종료')
+            #cap.release()
+            #cv2.destroyAllWindows()
+            return False
 
-        if k==ord('i'):
+        if k==ord('i'): #'i' 키로 감지 영역 재설정
             print('press any key to start detecting')
             inputmode = True
             frame2 = frame.copy()
@@ -115,13 +125,12 @@ def motionDetect(time):
                 cv2.waitKey(0)
 
         if time != 0 and count >= fps*time: #모션감지 동작시간 time값이 0이면 계속 동작
-            break
+            return number #일정시간 동안 움직임 감지하고 감지 횟수값 리턴
 
-    cap.release()
-    cv2.destroyAllWindows()
+    #cap.release()
+    #cv2.destroyAllWindows()
 
 
 
-motionDetect(0)
 
 
