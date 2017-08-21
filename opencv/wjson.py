@@ -62,5 +62,5 @@ def writejson(oldtime, d, sleeppattern, start_end, number): #함수 인자 oldti
         json.dump(sleepData, make_file, ensure_ascii=False)    
 
 
-writejson(time.time(), datetime.date.today(), 1, 1, 7)
+
 
