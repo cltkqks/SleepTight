@@ -4,6 +4,7 @@
 import detect
 import time
 import sys
+import cds
 
 f = open("sleep.txt", 'w')
 f.close()
@@ -17,9 +18,11 @@ def writetxt(contour):
     totalHours = totalMinutes // 60 # 현재 흐른시간을 시간으로 변환
     currentHour = totalHours % 24 # 현재시간의 시 구하기
     currentHour += 9 #한국시간으로 변화
+    if currentHour > 24:
+        currentHour -= 24
     
     f = open("sleep.txt", 'a')
-    data = "%d:%d contour값: %d\n" % (currentHour, currentMinute, contour)
+    data = "%d시%d분 %d초 contour값: %d\n" % (currentHour, currentMinute, currentsecond, contour)
     f.write(data)
     f.close()    
     
@@ -29,14 +32,25 @@ def writetxt(contour):
 
 def main():
     print('수면 패턴 분석을 위한 기록 시작')
+    cds.irLedon(26)
+    cds.irLedon(19)
+    cds.irLedon(5)
+    cds.irLedon(0)
+    a = input('동작 감지 민감도 설정: ')
+    time.sleep(60)
     while True:
         print('동작 감지중')
-        area = detect.motionDetect(0, 10000)
+        area = detect.motionDetect(0, a)
         print('동작 감지됨, 정보 기록')
         writetxt(area)
         
 
-try:
-    main()
-except KeyboardInterrupt:
-    sys.exit()
+#try:
+#    main()
+#except KeyboardInterrupt:
+#    cds.irLedoff(26)
+#    cds.irLedoff(19)
+#    cds.irLedoff(5)
+#    cds.irLedoff(0)
+#    cds.clean()
+#    sys.exit()
