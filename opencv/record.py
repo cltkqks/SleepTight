@@ -6,8 +6,11 @@ import time
 import sys
 import cds
 
-f = open("sleep.txt", 'w')
-f.close()
+
+def reset():
+    f = open("sleep.txt", 'w')
+    f.close()
+
 
 def writetxt(contour):
     currentTime = time.time() #현재시간 구하기
