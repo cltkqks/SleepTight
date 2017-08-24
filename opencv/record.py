@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #수면 패턴 분석을 위한 기록 코드
-
+#동작감지를 한것을 시간를 포함하여 txt파일에 정보 기록
 import detect
 import time
 #import sys
