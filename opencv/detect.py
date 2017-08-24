@@ -89,7 +89,7 @@ def motionDetect(time, contourValue, show):
         cv2.namedWindow('frame')  #-----------------------------
         cv2.setMouseCallback('frame', onMouse, param=(frame,frame2))  #------------
        
-#    print('width %d, height %d, total %d' % (width, height, (width*height)/3)) 
+    print('width: %d, height: %d, detect limit: %d' % (width, height, ((width*height)/3))) 
     if contourValue == 100000:
         print('감지구역 재설정을 위해 i를 누르고 마우스를 이용하여 구역을 재설정 하세요.')
         print('감지 구역 재설정을 끝내려면 esc 키를 누르세요.')
@@ -110,13 +110,15 @@ def motionDetect(time, contourValue, show):
         if (frameCount % 15 ) == 0: #15frame에 한번씩 모션 디텍트
             for c in contours: # 한 프레임의 contour들을 모두 찾아 검사해 움직임을 감지
                 areaValue = cv2.contourArea(c)
-                if areaValue < contourValue or areaValue > (width*height)/3  or count*fps < 2*fps:
+                if areaValue < contourValue:
                 #범위: #일정한 크기이상의 contours가 없으면 아래는 무시하고 while루프를 돈다
                     continue
-                elif time != 0 : #일정시간내 감지 동작시 
+                elif areaValue > ((width*height)/3):
+                    continue
+                elif time != 0 and time != -1: #일정시간내 감지 동작시 
                     print('MD')
                     print('픽셀 크기: %d' % areaValue)
-                    number += 1 #모션 감지 카운트
+                    return areaValue
                 elif time == 0:
                     print('MD')
                     print('픽셀 크기: %d' % areaValue)
@@ -149,7 +151,7 @@ def motionDetect(time, contourValue, show):
                 cv2.waitKey(0)
 
         if time != 0 and count >= fps*time and time != -1: #모션감지 동작시간 time값이 0이면 계속 동작
-            return number #일정시간 동안 움직임 감지하고 감지 횟수값 리턴
+            return 0 #일정시간 동안 움직임 감지하고 감지를 못하면 0 리턴
 
     #cap.release()
     #cv2.destroyAllWindows()
