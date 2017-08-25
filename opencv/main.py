@@ -37,7 +37,7 @@ def humanDetection():
             irledon()
             i = 0
             while i < 2:
-                areaValue = detect.motionDetect(100, contourHuman, 1) #일정시간동안 움직임 감지
+                areaValue = detect.motionDetect(100, contourHuman, showWindows) #일정시간동안 움직임 감지
                 if areaValue > 0:
                     detectNumber += 1
                 time.delay(1) #정확한 감지를 위한 딜레이
@@ -67,7 +67,7 @@ def sleepDetection():
         print('사람이 잠자는지 수면 감지 판별 start')
         while count < 10: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
             print('일정시간 동안 움직임 감지')
-            sleepdetect = detect.motionDetect(30, contourSleep, 1)
+            sleepdetect = detect.motionDetect(30, contourSleep, showWindows)
             if dataRecord == 1: #수면 데이터 상세 기록
                 record.writetxt(sleepdetect)
             if sleepdetect > 0: # 중복 감지를 방지하기 위한 딜레이
@@ -110,7 +110,7 @@ def sleepPattern():
     
     while True:
         time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
-        areaValue = detect.motionDetect(0, contourSleep, 1)
+        areaValue = detect.motionDetect(0, contourSleep, showWindows)
         time2 = time.time()
 
         if dataRecord == 1: #수면 데이터 상세 기록
@@ -272,7 +272,11 @@ while True:
         if c == 1:
             irledon()
             print('irLed on')
-        detect.motionDetect(-1, b, 1)
+        if showWindows == 1:
+            print('모니터링용 영상창 on')
+        else:
+            print('모니터링용 영상창 off')
+        detect.motionDetect(-1, b, showWindows)
         if c == 1:
             irledoff()
             print('irLed off')
