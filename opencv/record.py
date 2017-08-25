@@ -25,9 +25,9 @@ def writetxt(contour):
     currentHour += 9 #한국시간으로 변화
     if currentHour > 24:
         currentHour -= 24
-    
+    light = cds.light(4) 
     f = open("sleep.txt", 'a')
-    data = "%d시%d분%d초,%d\n" % (currentHour, currentMinute, currentsecond, contour)
+    data = "%d시%d분%d초,%d,%d\n" % (currentHour, currentMinute, currentsecond, contour, light)
     f.write(data)
     f.close()    
     
@@ -38,10 +38,7 @@ def writetxt(contour):
 def main():
     reset()
     print('수면 패턴 분석을 위한 기록 시작')
-    cds.irLedon(26)
-    cds.irLedon(19)
-    cds.irLedon(5)
-    cds.irLedon(0)
+    cds.irLedon(14)
     a = input('동작 감지 민감도 설정: ')
     b = input('delay time: ')
     print('delay')
@@ -57,10 +54,7 @@ def start():
     try:
         main()
     except KeyboardInterrupt:
-        cds.irLedoff(26)
-        cds.irLedoff(19)
-        cds.irLedoff(5)
-        cds.irLedoff(0)
+        cds.irLedoff(14)
         cds.clean()
         print('end')
 #        sys.exit()
