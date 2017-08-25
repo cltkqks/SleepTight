@@ -20,6 +20,8 @@ cap.set(3,640) #width 설정
 cap.set(4,480) #heigth 설정
 
 mog = cv2.createBackgroundSubtractorMOG2()   #차영상을 구하기위한 함수 설정
+#mog = cv2.bgsegm.createBackgroundSubtractorMOG()
+#mog = cv2.bgsegm.createBackgroundSubtractorGMG()
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))  #노이즈 제거를 위한 커널 설정
 
 def onMouse(event, x, y, flags, param): #마우스 동작 함수 roi 선택용
@@ -89,7 +91,7 @@ def motionDetect(time, contourValue, show):
         cv2.namedWindow('frame')  #-----------------------------
         cv2.setMouseCallback('frame', onMouse, param=(frame,frame2))  #------------
        
-    print('width: %d, height: %d, detect limit: %d' % (width, height, ((width*height)/3))) 
+    #print('width: %d, height: %d, detect limit: %d' % (width, height, ((width*height)/3))) 
     if contourValue == 100000:
         print('감지구역 재설정을 위해 i를 누르고 마우스를 이용하여 구역을 재설정 하세요.')
         print('감지 구역 재설정을 끝내려면 esc 키를 누르세요.')
