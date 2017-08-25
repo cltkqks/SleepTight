@@ -185,7 +185,59 @@ def irledoff():
     cds.irLedoff(14)
 
 def setUp():
-
+    global dataRecord, showWindows
+    print('설정값 출력----------')
+    if dataRecord == 1:
+        print('수면 데이터 상세 기록 on')
+    else:
+        print('수면 데이터 상세 기록 off')
+    if showWindows  == 1:
+        print('모니터링용 영상창 on')
+    else:
+        print('모니터링용 영상창 off')
+    while True:
+        s = input('원하는 설정을 선택- 1: 감지구역 설정, 2: 수면 데이터 상세 기록, 3: 카메라 영상 windows, 0: 종료 - ')
+        if s == 1: #감지 구역 재설정
+            print('감지 구역 재설정')
+            detect.motionDetect(0, 100000, 1)
+        elif s == 2: #수면 데이터 상세 기록 설정
+            while True:
+                k = input('수면 데이터 분석을 위해 상세 정보 기록 동작 on(1) or off(0): ')
+                if k == 1:
+                    print('수면 데이터 상세 기록 on')
+                    dataRecord = 1 # 수면 데이터 상세 기록 on
+                    break
+                elif k == 0:
+                    print('수면 데이터 상세 기록 off')
+                    dataRecord = 0 # 수면 데이터 상세 기록 off
+                    break
+                else:
+                    print('잘못된 입력, 다시 입력하세요.')
+        elif s == 3: # 카메라 영상창  on off 설정
+            while True:
+                k = input('영상 처리 모니터링을 위한 영상창 on(1) or off(0): ')
+                if k == 1:
+                    print('모니터링용 영상창 on')
+                    showWindows = 1
+                    break
+                elif k == 0:
+                    print('모니터링용 영상창 off')
+                    showWindows = 0
+                    break
+                else:
+                    print('잘못된 입력, 다시 입력하세요.')
+        elif s == 0:
+            print('설정값 출력----------')
+            if dataRecord == 1:
+                print('수면 데이터 상세 기록 on')
+            else:
+                print('수면 데이터 상세 기록 off')
+            if showWindows  == 1:
+                print('모니터링용 영상창 on')
+            else:
+                print('모니터링용 영상창 off')    
+            break
+                
 
 
 while True:
@@ -211,49 +263,7 @@ while True:
             cv2.destroyAllWindows()
             pass
     elif 2 == a:
-        if dataRecord == 1:
-            print('수면 데이터 상세 기록 on')
-        else:
-            print('수면 데이터 상세 기록 off')
-        if showWindows  == 1:
-            print('모니터링용 영상창 on')
-        else:
-            print('모니터링용 영상창 off')
-        while True:
-            s = input('원하는 설정을 선택- 1: 감지구역 설정, 2: 수면 데이터 상세 기록, 3: 카메라 영상 windows, 0: 종료 - ')
-            if s == 1: #감지 구역 재설정
-                print('감지 구역 재설정')
-                detect.motionDetect(0, 100000, 1)
-            elif s == 2: #수면 데이터 상세 기록 설정
-                while True:
-                    k = input('수면 데이터 분석을 위해 상세 정보 기록 동작 on(1) or off(0): ')
-                    if k == 1:
-                        print('수면 데이터 상세 기록 on')
-                        dataRecord = 1 # 수면 데이터 상세 기록 on
-                        break
-                    elif k == 0:
-                        print('수면 데이터 상세 기록 off')
-                        dataRecord = 0 # 수면 데이터 상세 기록 off
-                        break
-                    else:
-                        print('잘못된 입력, 다시 입력하세요.')
-            elif s == 3: # 카메라 영상창  on off 설정
-                while True:
-                    k = input('영상 처리 모니터링을 위한 영상창 on(1) or off(0): ')
-                    if k == 1:
-                        print('모니터링용 영상창 on')
-                        showWindows = 1
-                        break
-                    elif k == 0:
-                        print('모니터링용 영상창 off')
-                        showWindows = 0
-                        break
-                    else:
-                        print('잘못된 입력, 다시 입력하세요.')
-            elif s == 0:
-                print('설정값 출력')
-                
-                break
+        setUp()
                 
     elif 3 == a:
         b = int(input('동작 감지 설정값 입력: '))
