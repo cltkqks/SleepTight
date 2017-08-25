@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-#json 작성 코드
+#수면데이터 json 작성 코드
+
 
 import json
 import time
