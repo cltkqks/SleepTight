@@ -12,8 +12,9 @@ import record
 
 contourHuman = 1000 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
-cdsSetvalue = 600 #조도센서 설정값
-timeValue = 0
+cdsSetvalue = 700 #조도센서 설정값
+dataRecord = 0 #수면 데이터 상세 기록 on(1), off(0) flag
+showWindows = 1 #카메라 영상창 on(1), off(0) flag
 
 #조도센서로 불이 꺼지는것을 감지하면 사람의 움직임을 감지
 def humanDetection():
@@ -67,6 +68,8 @@ def sleepDetection():
         while count < 10: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
             print('일정시간 동안 움직임 감지')
             sleepdetect = detect.motionDetect(30, contourSleep, 1)
+            if dataRecord == 1: #수면 데이터 상세 기록
+                record.writetxt(sleepdetect)
             if sleepdetect > 0: # 중복 감지를 방지하기 위한 딜레이
                 time.delay(3) 
             count += 1
@@ -91,14 +94,15 @@ def sleepDetection():
 
 #수면 패턴 측정
 def sleepPattern():
-    global timeValue, contourSleep
+    global contourSleep
     maximumArea = 0
     d = datetime.date.today()
-    start_end = 1 #수면 시작, 끝 flag
-    sleepPattern = 1 #수면패턴 정보, 시작은 얕은 잠
+    start_end = 1 #수면 시작, 끝 flag, 1: 시작 2: 끝 0: 수면중
+    sleepPattern = 1 #수면패턴 정보, 시작은 얕은 잠, 1: 얕은 잠 2: 깊은 잠
     timeFlag = 0 #시간 저장을 위한 flag
     writeIndex = 1 #json 파일 넘버 인덱스
     cdsCount = 0 # 조도센서 측정을 위한 
+    detectCount = 0 #detect 카운터용
 
 
     print('수면 기록 start, json형식')
@@ -108,13 +112,17 @@ def sleepPattern():
         time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
         areaValue = detect.motionDetect(0, contourSleep, 1)
         time2 = time.time()
+
+        if dataRecord == 1: #수면 데이터 상세 기록
+            record.writetxt(areaValue)
+
         timeInterval = int(time2 - time1)
 
         if timeFlag == 0: #시간 저장을 위한 함수
             startTime = time1
             timeFlag = 1
 
-        while cdsCount < 3:
+        while cdsCount < 2:
             light = cds.light(4)
             print('조도 값: %d' % light)
             cdsCount += 1
@@ -126,21 +134,25 @@ def sleepPattern():
 
 
 
-        if timeInterval < 5: #짧은 시간내에 여러번 모션 감지가 되면 가장 큰 값만 얻기 위해(시간간격 4초이내)
+        if timeInterval < 5: #짧은 시간내에 여러번 모션 감지가 되면 가장 큰 값만 얻기 위해(시간간격 4초이내), 보통 모션감지가 10초내외로 여러번 감지되므로
             if areaValue > maximumArea:
                 maximumArea = areaValue
                       
         elif timeInterval > 840: #14분간 움직임이 없으면 깊은 수면
-            #startTime == time1 이 참일때
-            if startTime == time1:
-                wjson.writejson(startTime, time2, d, 0, start_end, writeIndex)
-                if start_end == 1:
-                    start_end = 0
+            # 수면 시작부터 깊은 수면일때
+            if start_end == 1 and writeIndex == 1 and time1 == startTime:
+                wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
+                start_end = 0 
                 writeIndex += 1
                 timeFlag = 0
-
-            #startTime 부터 time1 까지 얕은 수면
+            #깊은 수면 후 다시 깊은 수면 감지될때
+            elif time1 == startTime:
+                wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
+                writeIndex += 1
+                timeFlag = 0
+            #얕은 수면 후 깊은 수면 감지 될때
             else:
+                #startTime 부터 time1 까지 얕은 수면
                 wjson.writejson(startTime, time1, d, 1, start_end, writeIndex)
                 if start_end == 1:
                     start_end = 0
@@ -149,7 +161,7 @@ def sleepPattern():
                 #time1 부터 time2까지 깊은 수면
                 wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
                 writeIndex += 1       
-        else:
+        else: #14분 이내 모션감지가 되면 얕은 pass
             pass      
 
 
@@ -172,22 +184,80 @@ def irledon():
 def irledoff():
     cds.irLedoff(14)
 
+def setUp():
+
+
 
 while True:
     print('동작 모드 선택')
-    a = input('(1: 수면 패턴 측정, 2: 동작 감지 구역 설정, 3: 동작감지 테스트, 4: 수면 데이터 수집, 0: 종료): ')
+    a = input('(1: 수면 패턴 측정, 2: 설정, 3: 동작감지 테스트, 4: 수면 데이터 수집, 0: 종료): ')
+
     if 1 == a:
         try:
-            record.reset() #수면 기록 txt 리셋
+            if dataRecord == 1:
+                print('수면 데이터 상세 기록 on')
+                record.reset() #수면 기록 txt 리셋
+            else:
+                print('수면 데이터 상세 기록 off')
+
+            if showWindows == 1:
+                print('모니터링용 영상창 on')
+            else:
+                print('모니터링용 영상창 off')
+
             main()
+
         except KeyboardInterrupt:
             cv2.destroyAllWindows()
             pass
     elif 2 == a:
-        detect.motionDetect(0, 100000, 1)
+        if dataRecord == 1:
+            print('수면 데이터 상세 기록 on')
+        else:
+            print('수면 데이터 상세 기록 off')
+        if showWindows  == 1:
+            print('모니터링용 영상창 on')
+        else:
+            print('모니터링용 영상창 off')
+        while True:
+            s = input('원하는 설정을 선택- 1: 감지구역 설정, 2: 수면 데이터 상세 기록, 3: 카메라 영상 windows, 0: 종료 - ')
+            if s == 1: #감지 구역 재설정
+                print('감지 구역 재설정')
+                detect.motionDetect(0, 100000, 1)
+            elif s == 2: #수면 데이터 상세 기록 설정
+                while True:
+                    k = input('수면 데이터 분석을 위해 상세 정보 기록 동작 on(1) or off(0): ')
+                    if k == 1:
+                        print('수면 데이터 상세 기록 on')
+                        dataRecord = 1 # 수면 데이터 상세 기록 on
+                        break
+                    elif k == 0:
+                        print('수면 데이터 상세 기록 off')
+                        dataRecord = 0 # 수면 데이터 상세 기록 off
+                        break
+                    else:
+                        print('잘못된 입력, 다시 입력하세요.')
+            elif s == 3: # 카메라 영상창  on off 설정
+                while True:
+                    k = input('영상 처리 모니터링을 위한 영상창 on(1) or off(0): ')
+                    if k == 1:
+                        print('모니터링용 영상창 on')
+                        showWindows = 1
+                        break
+                    elif k == 0:
+                        print('모니터링용 영상창 off')
+                        showWindows = 0
+                        break
+                    else:
+                        print('잘못된 입력, 다시 입력하세요.')
+            elif s == 0:
+                print('설정값 출력')
+                
+                break
+                
     elif 3 == a:
         b = int(input('동작 감지 설정값 입력: '))
-        c = input('irLed on(1), off(0) 선택')
+        c = input('irLed on(1), off(0) 선택: ')
         print('테스트를 끝내려면 esc키를 누르세요')
         if c == 1:
             irledon()
