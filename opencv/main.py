@@ -15,7 +15,7 @@ contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
 cdsSetvalue = 700 #조도센서 설정값
 dataRecord = 0 #수면 데이터 상세 기록 on(1), off(0) flag
 showWindows = 1 #카메라 영상창 on(1), off(0) flag
-irLedState = 0 # irLed 상태 flag
+irLedState = '0' # irLed 상태 flag
 
 #조도센서로 불이 꺼지는것을 감지하면 사람의 움직임을 감지
 def humanDetection():
@@ -245,7 +245,7 @@ def detectTest():
     b = int(input('\n동작 감지 설정값 입력: '))
     irLedState = input('적외선 램프 on(1) or off(0) 선택: ')
     print('\n테스트를 끝내려면 esc키나 Ctrl + c키를 누르세요')
-    if irLedState == 1:
+    if irLedState == '1':
         irledon()
         print('\nirLed on\n')
     if showWindows == 1:
@@ -253,7 +253,7 @@ def detectTest():
     else:
         print('모니터링용 영상창 off')
     detect.motionDetect(-1, b, showWindows)
-    if irLedState == 1:
+    if irLedState == '1':
         irledoff()
         print('\nirLed off')
         cds.clean()
@@ -292,7 +292,7 @@ while True:
             detectTest()
             print('\n동작 감지 테스트 종료')
         except KeyboardInterrupt:
-            if irLedState == 1:
+            if irLedState == '1':
                 irledoff()
                 print('\nirLed off')
                 cds.clean()
