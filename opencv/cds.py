@@ -30,7 +30,7 @@ def light(pin):
     #pin이 hign가 될때까지 카운트
     while (GPIO.input(pin) == GPIO.LOW):
         count += 1
-        if count >= 5000:
+        if count >= 3000:
             break
 
     return count
