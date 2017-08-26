@@ -12,7 +12,7 @@ import record
 
 contourHuman = 1000 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
-cdsSetvalue = 700 #조도센서 설정값
+cdsSetvalue = 2000 #조도센서 설정값
 dataRecord = 0 #수면 데이터 상세 기록 on(1), off(0) flag
 showWindows = 1 #카메라 영상창 on(1), off(0) flag
 irLedState = '0' # irLed 상태 flag
@@ -93,7 +93,7 @@ def sleepDetection():
         return False
          
 
-
+#wjson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
 #수면 패턴 측정
 def sleepPattern():
     global contourSleep, showWindows, dataRecord
@@ -101,69 +101,132 @@ def sleepPattern():
     d = datetime.date.today()
     start_end = 1 #수면 시작, 끝 flag, 1: 시작 2: 끝 0: 수면중
     sleepPattern = 1 #수면패턴 정보, 시작은 얕은 잠, 1: 얕은 잠 2: 깊은 잠
-    timeFlag = 0 #시간 저장을 위한 flag
     writeIndex = 1 #json 파일 넘버 인덱스
     cdsCount = 0 # 조도센서 측정을 위한 
-    detectCount = 0 #detect 카운터용
+    detectFlag = 0 #detect 판별용 flag 1: 기록중, 0: 기록중 아님
 
+    lump1 = 0 # 0: 정보 저장 안된, 1: 저장중, 2: 저장됨
+    lump2 = 0
+
+    lump1Start = 0
+    lump1End = 0
+    lump2Start = 0
+    lump2End = 0
 
     print('수면 기록 start, json형식')
     
     while True:
+        while cdsCount < 2:
+            light = cds.light(4)
+            print('조도값: %d' % light)
+            cdsCount += 1
+        cdsCount = 0
+        if light > 2000:
+            print('불 켜짐, 수면 감지 종료')
+            currentTime = time.time()
+            wjson.writejson(lump1Start, currentTime, d, 1, 2, writeIndex)
+            return #수면 감지 종료
+        
         time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
         areaValue = detect.motionDetect(0, contourSleep, showWindows)
         time2 = time.time()
+
 
         if dataRecord == 1: #수면 데이터 상세 기록
             record.writetxt(areaValue)
 
         timeInterval = int(time2 - time1)
 
-        if timeFlag == 0: #시간 저장을 위한 함수
-            startTime = time1
-            timeFlag = 1
 
-        while cdsCount < 2:
-            light = cds.light(4)
-            print('조도 값: %d' % light)
-            cdsCount += 1
-        cdsCount = 0
-        if light < cdsSetValue:
-            print('light on, 수면 끝')
-            wjson.writejson(startTime, time2, d, 1, start_end, writeIndex)
-            writeIndex += 1
-            wjson.writejson(time2, time2, d, 1, 2, writeIndex)
-            break
-
-        if timeInterval < 5: #짧은 시간내에 여러번 모션 감지가 되면 가장 큰 값만 얻기 위해(시간간격 4초이내), 보통 모션감지가 10초내외로 여러번 감지되므로
-            if areaValue > maximumArea:
+        if detectFlag == 0:
+            if lump1 == 0:
                 maximumArea = areaValue
-                      
-        elif timeInterval > 840: #14분간 움직임이 없으면 깊은 수면
-            # 수면 시작부터 깊은 수면일때
-            if start_end == 1 and writeIndex == 1 and time1 == startTime:
-                wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
-                start_end = 0 
-                writeIndex += 1
-                timeFlag = 0
-            #깊은 수면 후 다시 깊은 수면 감지될때
-            elif time1 == startTime:
-                wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
-                writeIndex += 1
-                timeFlag = 0
-            #얕은 수면 후 깊은 수면 감지 될때
-            else:
-                #startTime 부터 time1 까지 얕은 수면
-                wjson.writejson(startTime, time1, d, 1, start_end, writeIndex)
+                lump1Start = time2
+                detectFlag = 1
+                lump1 = 1
+                continue 
+            elif lump2 == 0:
+                maximumArea = areaValue
+                lump2Start = time1
+                detectFlag = 1
+                lump2 = 1
+                continue
+        elif detectFlag == 1:
+            if timeInterval < 5:
+                if lump1 == 1:
+                    if areaValue > maximumArea:
+                        maximumArea = areaValue
+                    lump1End = time2
+                    continue
+                elif lump2 == 1:
+                    if areaValue > maximumArea:
+                        maximumArea = areaVAlue
+                    lump2End = time2
+                    continue
+            elif timeInterval > 5:
+                if lump1 == 1:
+                    if maximumArea > 7000:
+                        lump1 = 0
+                        detectFlag = 0
+                        lump1Start = 0
+                        lump1End = 0
+                        continue
+                    else:
+                        lump1 = 2
+                        lump1End = time1
+                        detectFlag = 0
+                        continue
+                elif lump2 == 1:
+                    if maximumArea > 7000:
+                        lump2 = 0
+                        detectFlag = 0
+                        lump2Start = 0
+                        lump2End = 0
+                        continue
+                    else:
+                        lump2 = 2
+                        
+
+        if lump1 == 2 and lump2 == 2:
+            t = lump1End - lump2Start
+            if t > 840:
+                wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
                 if start_end == 1:
                     start_end = 0
                 writeIndex += 1
-                timeFlag = 0
-                #time1 부터 time2까지 깊은 수면
-                wjson.writejson(time1, time2, d, 0, start_end, writeIndex)
-                writeIndex += 1       
-        else: #14분 이내 모션감지가 되면 얕은 pass
-            pass      
+                wjson.writejson(lump2Start, lump2End, d, 0, start_end, writeIndex)
+                writeIndex += 1
+                lump1Start = lump2Start
+                lump1End = lump2End
+                lump2 = 0
+                detectFlag = 0
+                #수면 패턴 기록 작성, lump2 = lump1
+            else:
+                lump2 = 0
+                lump1End = lump2End
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def main():
@@ -173,6 +236,8 @@ def main():
         if sleepValue == True:
             print('수면패턴 측정 시작')
             sleepPattern()
+
+            #통신 모듈 작동 부분
 
         elif sleepValue == False:
             print('수면 감지 재시작')
