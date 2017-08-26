@@ -5,7 +5,7 @@
 import numpy as np
 import cv2
 import os
-
+import cds
 
 
 def writeVideo():
@@ -17,7 +17,7 @@ def writeVideo():
         print('fail')
         return
     #원하는 fps 해상도 설정
-    fps = 15
+    fps = 10
     cap.set(3, 640)  #width
     cap.set(4, 480)  #height
 
@@ -38,7 +38,7 @@ def writeVideo():
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-        cv2.imshow('video', gray2)
+#        cv2.imshow('video', gray2)
         out.write(gray2)
 
         k = cv2.waitKey(1) & 0xFF
@@ -52,6 +52,13 @@ def writeVideo():
 
 
 
-
+cds.irLedon(26)
+cds.irLedon(19)
+cds.irLedon(5)
+cds.irLedon(0)
 writeVideo()
-
+cds.irLedoff(26)
+cds.irLedoff(19)
+cds.irLedoff(5)
+cds.irLedoff(0)
+cds.clean()
