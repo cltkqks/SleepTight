@@ -10,7 +10,7 @@ import datetime
 import cv2
 import record
 
-contourHuman = 1000 # 모션 감지 민감도 설정-사람 감지
+contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
 cdsSetvalue = 2000 #조도센서 설정값
 dataRecord = 0 #수면 데이터 상세 기록 on(1), off(0) flag
@@ -26,7 +26,7 @@ def humanDetection():
     print('조도 센서 감지')
     while True:
         time.sleep(1)
-        while cdsCount <= 2:
+        while cdsCount < 2:
             cdsValue = cds.light(4)
             print(cdsValue)
             cdsCount += 1
@@ -37,18 +37,23 @@ def humanDetection():
             print('불이 꺼짐, 동작 감지 시작, 감지 민감도: %d' % contourHuman)
             print('irLed on')
             irledon()
-            i = 0
-            while i < 2:
-                areaValue = detect.motionDetect(100, contourHuman, showWindows) #일정시간동안 움직임 감지
-                if areaValue > 0:
+            detectTime1 = time.time()
+            while True:
+                areaValue = detect.motionDetect(60, contourHuman, showWindows) #일정시간동안 움직임 감지
+                detectTime2 = time.time()
+                totalDetectTime = int(detectTime2 - detectTime1)
+                if totalDetectTime > 900:
+                    irledoff()
+                    print('사람없음')
+                    break
+                if areaValue > 800:
                     detectNumber += 1
-                time.delay(1) #정확한 감지를 위한 딜레이
-            if detectNumber >= 2: 
-                print('사람감지, 수면감지 시작')
-                return True #수면 감지
-            else:
-                irledoff()
-                print('사람없음')
+                    time.sleep(2) #정확한 감지를 위한 딜레이
+                if detectNumber >= 1: 
+                    print('사람감지, 수면감지 시작')
+                    return True #수면 감지
+
+
 
 #불이 꺼지고 사람이 움직이는 것이 감지되면 
 #사람이 잠드는 평균 시간인 30분간 모션 감지를 하여 
@@ -67,30 +72,34 @@ def sleepDetection():
         time.sleep(3) #정확한 분석을 위한 딜레이 
 
         print('사람이 잠자는지 수면 감지 판별 start')
-        while count < 10: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
+        detectTime1 = time.time()
+        while True: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
             print('일정시간 동안 움직임 감지')
             sleepdetect = detect.motionDetect(30, contourSleep, showWindows)
+            detectTime2 = time.time()
+            totalDetectTime = int(detectTime2 - detectTime1)
+            if totalDetectTime > 1800:
+                print('수면중인 사람 감지 실패, 사람 없음')
+                break
             if dataRecord == 1: #수면 데이터 상세 기록
                 record.writetxt(sleepdetect)
             if sleepdetect > 0: # 중복 감지를 방지하기 위한 딜레이
-                time.delay(3) 
+                time.sleep(3) 
             count += 1
 
             if sleepdetect > 0: #움직임이 감지되면 참
                 totaldetect += 1
-            if totaldetect > 1:
+            if totaldetect > 2:
                 print('수면 중인 사람 감지 성공')
                 return True
-            while cdsCount < 3: 
-                light = cds.light(4)
-                print('조도 값: %d' % light)
-                cdsCount += 1
-            cdsCount = 0
-            if light < cdsSetValue: #방안 등이 켜져있는지 검사
+            light = cds.light(4)
+            print('조도 값: %d' % light)
+            if light < 2000 : #방안 등이 켜져있는지 검사
                 print('light on, 수면 감지 실패')
-                return False
-        print('수면중인 사람 감지 실패, 사람 없음')
-        return False
+                break
+                
+
+
          
 
 #wjson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
@@ -116,12 +125,11 @@ def sleepPattern():
     print('수면 기록 start, json형식')
     
     while True:
-        while cdsCount < 2:
-            light = cds.light(4)
-            print('조도값: %d' % light)
-            cdsCount += 1
-        cdsCount = 0
-        if light > 2000:
+      
+        light = cds.light(4)
+        print('조도값: %d' % light)
+             
+        if light < 2000:
             print('불 켜짐, 수면 감지 종료')
             currentTime = time.time()
             wjson.writejson(lump1Start, currentTime, d, 1, 2, writeIndex)
@@ -144,12 +152,16 @@ def sleepPattern():
                 lump1Start = time2
                 detectFlag = 1
                 lump1 = 1
+                print('lump1=1')
+                print('lump1Start: %d' % lump1Start)
                 continue 
             elif lump2 == 0:
                 maximumArea = areaValue
                 lump2Start = time1
                 detectFlag = 1
                 lump2 = 1
+                print('lump2=1')
+                print('lump2Start: %d' % lump2Start)
                 continue
         elif detectFlag == 1:
             if timeInterval < 5:
@@ -160,40 +172,50 @@ def sleepPattern():
                     continue
                 elif lump2 == 1:
                     if areaValue > maximumArea:
-                        maximumArea = areaVAlue
+                        maximumArea = areaValue
                     lump2End = time2
                     continue
             elif timeInterval > 5:
                 if lump1 == 1:
                     if maximumArea > 7000:
                         lump1 = 0
+                        print('lump1=0')
                         detectFlag = 0
                         lump1Start = 0
                         lump1End = 0
                         continue
                     else:
                         lump1 = 2
+                        print('lump1=2')
                         lump1End = time1
+                        print('lump1End: %d' % lump1End)
                         detectFlag = 0
                         continue
                 elif lump2 == 1:
                     if maximumArea > 7000:
                         lump2 = 0
+                        print('lump2=0')
                         detectFlag = 0
                         lump2Start = 0
                         lump2End = 0
                         continue
                     else:
                         lump2 = 2
+                        lump2End = time1
+                        print('lump2=2')
+                        print('lump2End: %d' % lump2End)
                         
 
         if lump1 == 2 and lump2 == 2:
-            t = lump1End - lump2Start
+            t = int(lump2Start - lump1End)
+            print('lump1End - lump2Start: %d' % t)
             if t > 840:
+                print('얕은 수면 기록')
                 wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
                 if start_end == 1:
                     start_end = 0
                 writeIndex += 1
+                print('깊은 수면 기록')
                 wjson.writejson(lump2Start, lump2End, d, 0, start_end, writeIndex)
                 writeIndex += 1
                 lump1Start = lump2Start
@@ -203,6 +225,8 @@ def sleepPattern():
                 #수면 패턴 기록 작성, lump2 = lump1
             else:
                 lump2 = 0
+                print('lump2 = 0')
+                detectFlag = 0
                 lump1End = lump2End
 
 
