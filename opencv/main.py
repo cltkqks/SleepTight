@@ -155,7 +155,7 @@ def sleepPattern():
                 print('lump1=1')
                 print('lump1Start: %d' % lump1Start)
                 continue 
-            elif lump2 == 0:
+            elif lump2 == 0 and lump1 == 2:
                 maximumArea = areaValue
                 lump2Start = time1
                 detectFlag = 1
@@ -170,7 +170,7 @@ def sleepPattern():
                         maximumArea = areaValue
                     lump1End = time2
                     continue
-                elif lump2 == 1:
+                elif lump2 == 1 and lump1 == 2:
                     if areaValue > maximumArea:
                         maximumArea = areaValue
                     lump2End = time2
@@ -202,6 +202,7 @@ def sleepPattern():
                     else:
                         lump2 = 2
                         lump2End = time1
+                        detectFlag = 0
                         print('lump2=2')
                         print('lump2End: %d' % lump2End)
                         
@@ -216,7 +217,7 @@ def sleepPattern():
                     start_end = 0
                 writeIndex += 1
                 print('깊은 수면 기록')
-                wjson.writejson(lump2Start, lump2End, d, 0, start_end, writeIndex)
+                wjson.writejson(lump1End, lump2Start, d, 0, start_end, writeIndex)
                 writeIndex += 1
                 lump1Start = lump2Start
                 lump1End = lump2End
@@ -370,6 +371,9 @@ while True:
             main()
 
         except KeyboardInterrupt:
+            irledoff()
+            print('irled off')
+            cds.clean()
             cv2.destroyAllWindows()
             pass
     elif '2' == a:
