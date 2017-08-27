@@ -59,8 +59,8 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #í•¨ìˆ
 
     jsonString = json.dumps(sleepData)
 
-    print('\njsonString')
-    print(jsonString)
+#    print('\njsonString')
+#    print(jsonString)
 
     with open(name, 'w') as make_file:
         json.dump(sleepData, make_file, ensure_ascii=False)    
