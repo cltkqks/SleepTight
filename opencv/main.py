@@ -10,11 +10,12 @@ import datetime
 import cv2
 import record
 
+noiseArea = 5000 # 노이즈 판별 크기
 contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
 cdsSetvalue = 2000 #조도센서 설정값
-dataRecord = 0 #수면 데이터 상세 기록 on(1), off(0) flag
-showWindows = 1 #카메라 영상창 on(1), off(0) flag
+dataRecord = 1 #수면 데이터 상세 기록 on(1), off(0) flag
+showWindows = 0 #카메라 영상창 on(1), off(0) flag
 irLedState = '0' # irLed 상태 flag
 
 #조도센서로 불이 꺼지는것을 감지하면 사람의 움직임을 감지
@@ -75,6 +76,7 @@ def sleepDetection():
         detectTime1 = time.time()
         while True: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
             print('일정시간 동안 움직임 감지')
+            light = cds.light(4)
             sleepdetect = detect.motionDetect(30, contourSleep, showWindows)
             detectTime2 = time.time()
             totalDetectTime = int(detectTime2 - detectTime1)
@@ -82,7 +84,7 @@ def sleepDetection():
                 print('수면중인 사람 감지 실패, 사람 없음')
                 break
             if dataRecord == 1: #수면 데이터 상세 기록
-                record.writetxt(sleepdetect)
+                record.writetxt(sleepdetect, light)
             if sleepdetect > 0: # 중복 감지를 방지하기 위한 딜레이
                 time.sleep(3) 
             count += 1
@@ -92,7 +94,6 @@ def sleepDetection():
             if totaldetect > 2:
                 print('수면 중인 사람 감지 성공')
                 return True
-            light = cds.light(4)
             print('조도 값: %d' % light)
             if light < 2000 : #방안 등이 켜져있는지 검사
                 print('light on, 수면 감지 실패')
@@ -113,6 +114,7 @@ def sleepPattern():
     writeIndex = 1 #json 파일 넘버 인덱스
     cdsCount = 0 # 조도센서 측정을 위한 
     detectFlag = 0 #detect 판별용 flag 1: 기록중, 0: 기록중 아님
+    detectConut = 0 #감지횟수 카운터
 
     lump1 = 0 # 0: 정보 저장 안된, 1: 저장중, 2: 저장됨
     lump2 = 0
@@ -129,10 +131,14 @@ def sleepPattern():
         light = cds.light(4)
         print('조도값: %d' % light)
              
-        if light < 2000:
+        if light < 2500:
             print('불 켜짐, 수면 감지 종료')
             currentTime = time.time()
-            wjson.writejson(lump1Start, currentTime, d, 1, 2, writeIndex)
+            wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex)
+            writeIndex += 1
+            wjson.writejson(currentTime, currentTime, d, 1, 2, writeInde)
+            if dataRecord == 1:
+                record.writetxt(areaValue, light)
             return #수면 감지 종료
         
         time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
@@ -141,23 +147,29 @@ def sleepPattern():
 
 
         if dataRecord == 1: #수면 데이터 상세 기록
-            record.writetxt(areaValue)
+            record.writetxt(areaValue, light)
 
         timeInterval = int(time2 - time1)
 
 
         if detectFlag == 0:
             if lump1 == 0:
+                if areaValue > noiseArea:
+                    continue
                 maximumArea = areaValue
                 lump1Start = time2
+                detectCount += 1
                 detectFlag = 1
                 lump1 = 1
                 print('lump1=1')
                 print('lump1Start: %d' % lump1Start)
                 continue 
             elif lump2 == 0 and lump1 == 2:
+                if areaValue > noiseArea:
+                    continue
                 maximumArea = areaValue
                 lump2Start = time1
+                detectCount += 1
                 detectFlag = 1
                 lump2 = 1
                 print('lump2=1')
@@ -167,19 +179,28 @@ def sleepPattern():
             if timeInterval < 5:
                 if lump1 == 1:
                     if areaValue > maximumArea:
-                        maximumArea = areaValue
+                        if areaValue < noiseArea:
+                            maximumArea = areaValue
+                        else:
+                            continue
+                    detectCount += 1
                     lump1End = time2
                     continue
                 elif lump2 == 1 and lump1 == 2:
                     if areaValue > maximumArea:
-                        maximumArea = areaValue
+                        if areaValue < noiseArea:
+                            maximumArea = areaValue
+                        else:
+                            continue
+                    detectCount += 1
                     lump2End = time2
                     continue
             elif timeInterval > 5:
                 if lump1 == 1:
-                    if maximumArea > 7000:
+                    if maximumArea > noiseArea or detectCount == 1:
                         lump1 = 0
                         print('lump1=0')
+                        detectCount = 0
                         detectFlag = 0
                         lump1Start = 0
                         lump1End = 0
@@ -189,12 +210,14 @@ def sleepPattern():
                         print('lump1=2')
                         lump1End = time1
                         print('lump1End: %d' % lump1End)
+                        detectCount = 0
                         detectFlag = 0
                         continue
                 elif lump2 == 1:
-                    if maximumArea > 7000:
+                    if maximumArea > noiseArea or detectCount == 1:
                         lump2 = 0
                         print('lump2=0')
+                        detectCount = 0
                         detectFlag = 0
                         lump2Start = 0
                         lump2End = 0
@@ -202,6 +225,7 @@ def sleepPattern():
                     else:
                         lump2 = 2
                         lump2End = time1
+                        detectCount = 0
                         detectFlag = 0
                         print('lump2=2')
                         print('lump2End: %d' % lump2End)
@@ -222,6 +246,7 @@ def sleepPattern():
                 lump1Start = lump2Start
                 lump1End = lump2End
                 lump2 = 0
+                detectCount = 0
                 detectFlag = 0
                 #수면 패턴 기록 작성, lump2 = lump1
             else:
@@ -229,28 +254,7 @@ def sleepPattern():
                 print('lump2 = 0')
                 detectFlag = 0
                 lump1End = lump2End
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                print('lump1End : %d' % lump1End)
 
 
 
@@ -331,22 +335,28 @@ def setUp():
 
 
 def detectTest():
-    global showWindows, irLedState
+    global irLedState
     b = int(input('\n동작 감지 설정값 입력: '))
     irLedState = input('적외선 램프 on(1) or off(0) 선택: ')
+    k = input('모니터링 영상창 on(1) or off(0) 선택: ')
     print('\n테스트를 끝내려면 esc키나 Ctrl + c키를 누르세요')
     if irLedState == '1':
         irledon()
         print('\nirLed on\n')
-    if showWindows == 1:
+    if k == '1':
+        tempState = 1
+    else:
+        tempState = 0
+    if tempState == 1:
         print('모니터링용 영상창 on')
     else:
         print('모니터링용 영상창 off')
-    detect.motionDetect(-1, b, showWindows)
+    detect.motionDetect(-1, b, tempState)
     if irLedState == '1':
         irledoff()
         print('\nirLed off')
         cds.clean()
+    
                 
 
 
