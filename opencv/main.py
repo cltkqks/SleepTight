@@ -106,12 +106,12 @@ def sleepDetection():
 
 #wjson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
 #수면 패턴 측정
-def sleepPattern():
+def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
     global contourSleep, showWindows, dataRecord, noiseArea, deepTime
     maximumArea = 0
     d = datetime.date.today()
     start_end = 1 #수면 시작, 끝 flag, 1: 시작 2: 끝 0: 수면중
-    sleepPattern = 1 #수면패턴 정보, 시작은 얕은 잠, 1: 얕은 잠 2: 깊은 잠
+    sleepPatternIndex = 1 #수면패턴 정보, 시작은 얕은 잠, 1: 얕은 잠 2: 깊은 잠
     writeIndex = 1 #json 파일 넘버 인덱스
     cdsCount = 0 # 조도센서 측정을 위한 
     detectFlag = 0 #detect 판별용 flag 1: 기록중, 0: 기록중 아님
@@ -125,30 +125,49 @@ def sleepPattern():
     lump2Start = 0
     lump2End = 0
 
-    print('수면 기록 start, json형식')
-    
+    if run == 1:
+        print('수면 패턴 측정 start')
+    elif run == 0:
+        print('수면 데이터 분석 start')
+        f = open("sleepData.txt", 'r')
+
     while True:
-      
-        light = cds.light(4)
-        print('조도값: %d' % light)
+
+        if run == 1:
+            light = cds.light(4)
+            print('조도값: %d' % light)
              
-        if light < 2500:
-            print('불 켜짐, 수면 감지 종료')
-            currentTime = time.time()
-            wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex)
-            writeIndex += 1
-            wjson.writejson(currentTime, currentTime, d, 1, 2, writeInde)
-            if dataRecord == 1:
-                record.writetxt(areaValue, light)
-            return #수면 감지 종료
+            if light < cdsSetvalue:
+                print('불 켜짐, 수면 감지 종료')
+                currentTime = time.time()
+                wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex)
+                writeIndex += 1
+                wjson.writejson(currentTime, currentTime, d, 1, 2, writeInde)
+                if dataRecord == 1:
+                    record.writetxt(areaValue, light)
+                irledoff()
+                return #수면 감지 종료
         
-        time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
-        areaValue = detect.motionDetect(0, contourSleep, showWindows)
-        time2 = time.time()
+        if run == 1:
+            time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
+            areaValue = detect.motionDetect(0, contourSleep, showWindows)
+            time2 = time.time()
+        elif run == 0:
+            line = f.readline()
+            if line == '':
+                wjson.writejson(lump1Start, time2, d, 1, 0, writeIndex)
+                writeIndex += 1
+                wjson.writejson(time2, time2, d, 1, 2, writeIndex)
+                return
+            lineSplit = line.split(',')
+            time1 = lineSplit[0]
+            time2 = lineSplit[1]
+            areaValue = lineSplit[2]
 
 
-        if dataRecord == 1: #수면 데이터 상세 기록
+        if dataRecord == 1 and run == 1: #수면 데이터 상세 기록
             record.writetxt(areaValue, light)
+            record.sleepData(time1, time2, areaValue) #수면 분석 프로그램용
 
         timeInterval = int(time2 - time1)
 
@@ -266,7 +285,7 @@ def main():
         sleepValue = sleepDetection() # 수면 감지
         if sleepValue == True:
             print('수면패턴 측정 시작')
-            sleepPattern()
+            sleepPattern(1)
 
             #통신 모듈 작동 부분
 
@@ -364,7 +383,7 @@ def detectTest():
 
 while True:
     print('\n동작 모드 선택')
-    a = input('(1: 수면 패턴 측정, 2: 설정, 3: 동작감지 테스트, 4: 수면 데이터 수집, 0: 종료): ')
+    a = input('(1: 수면 패턴 측정, 2: 설정, 3: 동작감지 테스트, 4: 수면 데이터 분석, 0: 종료): ')
 
     if '1' == a:
         try:
@@ -372,6 +391,7 @@ while True:
             if dataRecord == 1:
                 print('수면 데이터 상세 기록 on')
                 record.reset() #수면 기록 txt 리셋
+                record.sleepDataReset()
             else:
                 print('수면 데이터 상세 기록 off')
 
@@ -405,8 +425,9 @@ while True:
             
             
     elif '4' == a:
-        record.start()
+        sleepPattern(0)
     elif '0' == a:
         break
     else:
         print('다시 입력해 주세요')
+
