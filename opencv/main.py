@@ -114,7 +114,7 @@ def sleepPattern():
     writeIndex = 1 #json 파일 넘버 인덱스
     cdsCount = 0 # 조도센서 측정을 위한 
     detectFlag = 0 #detect 판별용 flag 1: 기록중, 0: 기록중 아님
-    detectConut = 0 #감지횟수 카운터
+    detectCount = 0 #감지횟수 카운터
 
     lump1 = 0 # 0: 정보 저장 안된, 1: 저장중, 2: 저장됨
     lump2 = 0
@@ -252,6 +252,7 @@ def sleepPattern():
             else:
                 lump2 = 0
                 print('lump2 = 0')
+                detectCount = 0
                 detectFlag = 0
                 lump1End = lump2End
                 print('lump1End : %d' % lump1End)
