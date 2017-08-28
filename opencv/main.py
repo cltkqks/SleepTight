@@ -96,7 +96,7 @@ def sleepDetection():
                 print('수면 중인 사람 감지 성공')
                 return True
             print('조도 값: %d' % light)
-            if light < 2000 : #방안 등이 켜져있는지 검사
+            if light < cdsSetvalue: #방안 등이 켜져있는지 검사
                 print('light on, 수면 감지 실패')
                 break
                 
