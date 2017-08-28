@@ -237,6 +237,6 @@ int main()
 	while (1)
 	{  
 		write_server(client);
-                break;
+               
 	}
 }
