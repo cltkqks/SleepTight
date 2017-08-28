@@ -14,7 +14,7 @@ def reset():
     f.close()
 
 
-def writetxt(contour):
+def writetxt(contour, light):
     currentTime = time.time() #현재시간 구하기
     totalseconds = int(currentTime) #현재시간을 초 단위로 변환
     currentsecond = totalseconds % 60 #현재 시간의 초 구하기
@@ -25,7 +25,6 @@ def writetxt(contour):
     currentHour += 9 #한국시간으로 변화
     if currentHour > 24:
         currentHour -= 24
-    light = cds.light(4) 
     f = open("sleep.txt", 'a')
     data = "%d시%d분%d초,%d,%d\n" % (currentHour, currentMinute, currentsecond, contour, light)
     f.write(data)
@@ -43,11 +42,12 @@ def main():
     b = input('delay time: ')
     print('delay')
     time.sleep(b)
+    light = 0
     while True:
         print('동작 감지중')
         area = detect.motionDetect(0, a, 0)
         print('동작 감지됨, 정보 기록')
-        writetxt(area)
+        writetxt(area, light)
     
 
 def start():    
