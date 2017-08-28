@@ -31,6 +31,16 @@ def writetxt(contour, light):
     f.close()    
     
 
+def sleepDataReset():
+    f = open("sleepData.txt", 'w')
+    f.close()
+
+def sleepData(time1, time2, contour):
+    f = open("sleepData.txt", 'a')
+    data = "%d,%d,%d,\n" % (time1, time2, contour)
+    f.write(data)
+    f.close() 
+
 
 
 
