@@ -10,6 +10,7 @@ import datetime
 import cv2
 import record
 
+deepTime = 330 #깊은잠 판별 시간
 noiseArea = 5000 # 노이즈 판별 크기
 contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
@@ -106,7 +107,7 @@ def sleepDetection():
 #wjson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
 #수면 패턴 측정
 def sleepPattern():
-    global contourSleep, showWindows, dataRecord
+    global contourSleep, showWindows, dataRecord, noiseArea, deepTime
     maximumArea = 0
     d = datetime.date.today()
     start_end = 1 #수면 시작, 끝 flag, 1: 시작 2: 끝 0: 수면중
@@ -234,7 +235,7 @@ def sleepPattern():
         if lump1 == 2 and lump2 == 2:
             t = int(lump2Start - lump1End)
             print('lump1End - lump2Start: %d' % t)
-            if t > 840:
+            if t > deepTime:
                 print('얕은 수면 기록')
                 wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
                 if start_end == 1:
