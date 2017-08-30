@@ -19,7 +19,7 @@ cap.set(cv2.CAP_PROP_FPS, fps) # fps 설정
 cap.set(3,640) #width 설정
 cap.set(4,480) #heigth 설정
 
-mog = cv2.createBackgroundSubtractorMOG2()   #차영상을 구하기위한 함수 설정
+mog = cv2.createBackgroundSubtractorMOG2(detectShadows=False)   #차영상을 구하기위한 함수 설정
 #mog = cv2.bgsegm.createBackgroundSubtractorMOG()
 #mog = cv2.bgsegm.createBackgroundSubtractorGMG()
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))  #노이즈 제거를 위한 커널 설정
