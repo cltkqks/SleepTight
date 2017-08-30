@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #main function code
 
+import os
 import detect
 import cds
 import time
@@ -10,7 +11,7 @@ import datetime
 import cv2
 import record
 
-deepTime = 330 #깊은잠 판별 시간
+deepTime = 900 #깊은잠 판별 시간
 noiseArea = 5000 # 노이즈 판별 크기
 contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
@@ -130,7 +131,6 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
     elif run == 0:
         print('수면 데이터 분석 start')
         f = open("sleepData.txt", 'r')
-
     while True:
 
         if run == 1:
@@ -142,7 +142,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 currentTime = time.time()
                 wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex)
                 writeIndex += 1
-                wjson.writejson(currentTime, currentTime, d, 1, 2, writeInde)
+                wjson.writejson(currentTime, currentTime, d, 1, 2, writeIndex)
                 if dataRecord == 1:
                     record.writetxt(areaValue, light)
                 irledoff()
@@ -160,9 +160,9 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 wjson.writejson(time2, time2, d, 1, 2, writeIndex)
                 return
             lineSplit = line.split(',')
-            time1 = lineSplit[0]
-            time2 = lineSplit[1]
-            areaValue = lineSplit[2]
+            time1 = int(lineSplit[0])
+            time2 = int(lineSplit[1])
+            areaValue = int(lineSplit[2])
 
 
         if dataRecord == 1 and run == 1: #수면 데이터 상세 기록
@@ -196,12 +196,13 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 print('lump2Start: %d' % lump2Start)
                 continue
         elif detectFlag == 1:
-            if timeInterval < 5:
+            if timeInterval <= 7:
                 if lump1 == 1:
                     if areaValue > maximumArea:
                         if areaValue < noiseArea:
                             maximumArea = areaValue
                         else:
+                            lump1End = time1
                             continue
                     detectCount += 1
                     lump1End = time2
@@ -211,11 +212,12 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                         if areaValue < noiseArea:
                             maximumArea = areaValue
                         else:
+                            lump2End = time1
                             continue
                     detectCount += 1
                     lump2End = time2
                     continue
-            elif timeInterval > 5:
+            elif timeInterval > 7:
                 if lump1 == 1:
                     if maximumArea > noiseArea or detectCount == 1:
                         lump1 = 0
@@ -255,20 +257,32 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
             t = int(lump2Start - lump1End)
             print('lump1End - lump2Start: %d' % t)
             if t > deepTime:
-                print('얕은 수면 기록')
-                wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
-                if start_end == 1:
-                    start_end = 0
-                writeIndex += 1
-                print('깊은 수면 기록')
-                wjson.writejson(lump1End, lump2Start, d, 0, start_end, writeIndex)
-                writeIndex += 1
-                lump1Start = lump2Start
-                lump1End = lump2End
-                lump2 = 0
-                detectCount = 0
-                detectFlag = 0
-                #수면 패턴 기록 작성, lump2 = lump1
+                if (lump1End - lump1Start) < 60:
+                    writeIndex -= 1
+                    wjson.writejson(oldlump1End, lump2Start, d, 0, start_end, writeIndex)
+                    writeIndex += 1
+                    lump1Start = lump2Start
+                    lump1End = lump2End
+                    lump2 = 0
+                    detectCount = 0
+                    detectFlag = 0
+
+                else:
+                    print('얕은 수면 기록')
+                    wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
+                    if start_end == 1:
+                        start_end = 0
+                    writeIndex += 1
+                    print('깊은 수면 기록')
+                    wjson.writejson(lump1End, lump2Start, d, 0, start_end, writeIndex)
+                    writeIndex += 1
+                    oldlump1End = lump1End
+                    lump1Start = lump2Start
+                    lump1End = lump2End
+                    lump2 = 0
+                    detectCount = 0
+                    detectFlag = 0
+                    #수면 패턴 기록 작성, lump2 = lump1
             else:
                 lump2 = 0
                 print('lump2 = 0')
@@ -425,7 +439,9 @@ while True:
             
             
     elif '4' == a:
+        os.system("rm -rf *.json")
         sleepPattern(0)
+        wjson.jsonTotxt()
     elif '0' == a:
         break
     else:
