@@ -67,4 +67,33 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #í•¨ìˆ
 
 
 
+def jsonTotxt():
+    f1 = open("json.txt", 'w')
+    f1.close()
+    f1 = open("json.txt", 'a')
+    d = datetime.date.today()
+    number = 1
+    f = open(str(number) + d.strftime('%Y%m%d')+'.json', 'r')
+    try:
+        while True:
+            line = f.readline()
+            f.close()
+            f1.write(line+'\n')
+            number += 1
+            f = open(str(number) + d.strftime('%Y%m%d') + '.json', 'r')
+    except:
+        f.close()
+
+def wjsonTotxt():
+    try:
+        jsonTotxt()
+    except FileNotFoundError:
+        f.close()
+
+
+
+
+
+
+
 
