@@ -42,6 +42,11 @@ def sleepData(time1, time2, contour):
     f.close() 
 
 
+def jsonTotxt():
+    i = 1
+    
+    
+
 
 
 def main():
