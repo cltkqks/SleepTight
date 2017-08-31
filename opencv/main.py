@@ -11,7 +11,7 @@ import datetime
 import cv2
 import record
 
-deepTime = 900 #깊은잠 판별 시간
+deepTime = 950 #깊은잠 판별 시간
 noiseArea = 5000 # 노이즈 판별 크기
 contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
@@ -22,7 +22,7 @@ irLedState = '0' # irLed 상태 flag
 
 #조도센서로 불이 꺼지는것을 감지하면 사람의 움직임을 감지
 def humanDetection():
-    global cdsSetvalue, contourHuman, showWindows
+    global cdsSetvalue, contourHuman, showWindows, dataRecord
     cdsValue = 0
     cdsCount = 0
     detectNumber = 0
@@ -105,7 +105,7 @@ def sleepDetection():
 
          
 
-#wjson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
+#wjson.writejson 인자 pastTime(이전시간), currentTime(현재시간), day(날짜), sleeppattern(깊은잠 or 얕은잠), start_end flag, number(파일이름 넘버링)
 #수면 패턴 측정
 def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
     global contourSleep, showWindows, dataRecord, noiseArea, deepTime
@@ -137,24 +137,24 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
             light = cds.light(4)
             print('조도값: %d' % light)
              
-            if light < cdsSetvalue:
+            if light < cdsSetvalue:  #조도 센서를 통해 수면의 종료 되는 것을 감지한다.
                 print('불 켜짐, 수면 감지 종료')
                 currentTime = time.time()
-                wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex)
+                wjson.writejson(lump1Start, currentTime, d, 1, 0, writeIndex) # 수면 데이터를 기록하기 위한 함수
                 writeIndex += 1
                 wjson.writejson(currentTime, currentTime, d, 1, 2, writeIndex)
                 if dataRecord == 1:
-                    record.writetxt(areaValue, light)
+                    record.writetxt(areaValue, light) # 동작 감지 정보를 기록하기 위한 함수
                 irledoff()
                 return #수면 감지 종료
         
         if run == 1:
             time1 = time.time() # time1, time2는 모션 감지 시간 간격을 재기 위한 변수
-            areaValue = detect.motionDetect(0, contourSleep, showWindows)
+            areaValue = detect.motionDetect(0, contourSleep, showWindows) # 움직임이 감지되면 움직임 크기를 반환한다.
             time2 = time.time()
         elif run == 0:
-            line = f.readline()
-            if line == '':
+            line = f.readline()    # 수면 데이터 분석을 위한 부분
+            if line == '':         # 저장된 동작 감지 정보를 불러와 수면 분석을 실시
                 wjson.writejson(lump1Start, time2, d, 1, 0, writeIndex)
                 writeIndex += 1
                 wjson.writejson(time2, time2, d, 1, 2, writeIndex)
@@ -171,12 +171,14 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
 
         timeInterval = int(time2 - time1)
 
-
-        if detectFlag == 0:
-            if lump1 == 0:
-                if areaValue > noiseArea:
+        # 짧은 시간 내에 감지된 움직임들은 하나의 묶음으로 생각한다.
+        # 묶음을 lump라 부르고 두 개의 묶음인 lump1 lump2가 기록되면
+        # 두 묶음의 시간 간격을 검사해 얕은 수면인지 깊은 수면인지 판별
+        if detectFlag == 0: #기록이 처음 시작되면 참
+            if lump1 == 0: #lump1에 기록이 비어 있으면 참
+                if areaValue > noiseArea: #노이즈가 감지되면 넘어감 매우 큰 크기의 값이 감지되는 경우
                     continue
-                maximumArea = areaValue
+                maximumArea = areaValue #lump1 정보 기록
                 lump1Start = time2
                 detectCount += 1
                 detectFlag = 1
@@ -184,7 +186,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 print('lump1=1')
                 print('lump1Start: %d' % lump1Start)
                 continue 
-            elif lump2 == 0 and lump1 == 2:
+            elif lump2 == 0 and lump1 == 2: #lump1 기록이 완료되면 lump2를 기록 시작
                 if areaValue > noiseArea:
                     continue
                 maximumArea = areaValue
@@ -195,7 +197,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 print('lump2=1')
                 print('lump2Start: %d' % lump2Start)
                 continue
-        elif detectFlag == 1:
+        elif detectFlag == 1: #lump1, 2가 기록중일때 감지된 동작들을 검사해 lump에 알맞은 정보를 기록한다.
             if timeInterval <= 7:
                 if lump1 == 1:
                     if areaValue > maximumArea:
@@ -252,28 +254,28 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                         print('lump2=2')
                         print('lump2End: %d' % lump2End)
                         
-
-        if lump1 == 2 and lump2 == 2:
+        # 감지된 동작들의 묶음인 lump1, 2가 둘다 기록이 완료되면 묶음간의 시간 간격을 검사해 수면 패턴을 측정 및 기록한다.
+        if lump1 == 2 and lump2 == 2: 
             t = int(lump2Start - lump1End)
             print('lump1End - lump2Start: %d' % t)
-            if t > deepTime:
-                if (lump1End - lump1Start) < 60:
+            if t > deepTime:  #lump1, 2 사이의 시간 간격이 일정 값 이상이면 깊은 잠을 감지
+                if (lump1End - lump1Start) < 60: #노이즈 제거 부분 너무 짧은 시간인 경우
                     writeIndex -= 1
-                    wjson.writejson(oldlump1End, lump2Start, d, 0, start_end, writeIndex)
+                    wjson.writejson(oldlump1End, lump2Start, d, 0, start_end, writeIndex) #앞서 작성된 수면 정보 수정
                     writeIndex += 1
                     lump1Start = lump2Start
                     lump1End = lump2End
                     lump2 = 0
                     detectCount = 0
                     detectFlag = 0
-
+                # 수면 정보를 기록하는 부분, json 형식으로 저장된다.
                 else:
-                    print('얕은 수면 기록')
+                    print('얕은 수면 기록') #lump1Start 부터 lump1End 까지 얕은잠
                     wjson.writejson(lump1Start, lump1End, d, 1, start_end, writeIndex)
                     if start_end == 1:
                         start_end = 0
                     writeIndex += 1
-                    print('깊은 수면 기록')
+                    print('깊은 수면 기록') #lump1End 부터 lump2Start 까지 깊은잠
                     wjson.writejson(lump1End, lump2Start, d, 0, start_end, writeIndex)
                     writeIndex += 1
                     oldlump1End = lump1End
@@ -283,7 +285,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                     detectCount = 0
                     detectFlag = 0
                     #수면 패턴 기록 작성, lump2 = lump1
-            else:
+            else: #일정시간 값 이하이면 계속 얕은 잠을 자고 있는 것으로 판단
                 lump2 = 0
                 print('lump2 = 0')
                 detectCount = 0
