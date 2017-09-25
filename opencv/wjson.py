@@ -37,7 +37,7 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #함�
     #d = datetime.date.today() #한번만 실행 하면 되기에 함수 인자로 넘겨 받음
     
     name = 'data/' + str(number) + d.strftime('%Y%m%d') + '.json'
-    nametxt = 'data/' + str(number) + d.strftime('%Y%m%d') + '.txt'
+    nametxt = 'data/' + str(number) + '.txt'
     day = int(d.strftime('%Y%m%d'))
     sleeptime = (currentoldHour*100) +  currentoldMinute
     patterntime = totalMinutes - totaloldMinutes
@@ -86,14 +86,14 @@ def jsonTotxt():    #json to TXT file
     f1 = open("json.txt", 'a')
     d = datetime.date.today()
     number = 1
-    f = open('data/' + str(number) + d.strftime('%Y%m%d')+'.txt', 'r')
+    f = open('data/' + str(number) +'.txt', 'r')
     try:
         while True:
             line = f.readline()
             f.close()
             f1.write(line+'\n')
             number += 1
-            f = open('data/' + str(number) + d.strftime('%Y%m%d') + '.txt', 'r')
+            f = open('data/' + str(number) + '.txt', 'r')
     except:
         f.close()
 

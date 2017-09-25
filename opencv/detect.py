@@ -118,19 +118,19 @@ def motionDetect(time, contourValue, show):
                 elif areaValue > ((width*height)/3):
                     continue
                 elif time != 0 and time != -1: #일정시간내 감지 동작시 
-                    print('MD')
-                    print('픽셀 크기: %d' % areaValue)
+                    print('동작 감지')
+                    print('동작 크기: %d' % areaValue)
                     return areaValue
                 elif time == 0:
-                    print('MD')
-                    print('픽셀 크기: %d' % areaValue)
+                    print('동작 감지')
+                    print('동작 크기: %d' % areaValue)
                     number += 1
                     saveImage(roi, fgmask)
                     return areaValue #수면 기록 테스트를 위한 리턴값
                     #return True #시간제한 없이 감지 동작-감지 동작하면 리턴
                 elif time == -1:
-                    print('MD')
-                    print('픽셀 크기: %d' % areaValue)
+                    print('동작 감지')
+                    print('동작 크기: %d' % areaValue)
                 
         cv2.rectangle(frame,(col,row),(col+width,row+height),(0,255,0),2)
         if show == 1:
@@ -144,7 +144,8 @@ def motionDetect(time, contourValue, show):
             return False
 
         if k==ord('i'): #'i' 키로 감지 영역 재설정
-            print('press any key to start detecting')
+            print('동작 감지를 원하는 구간을 마우스로 지정하세요')
+            print('감지를 시작하려면 아무키나 누르세요')
             inputmode = True
             frame2 = frame.copy()
 

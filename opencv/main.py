@@ -38,8 +38,8 @@ def humanDetection():
         cdsCount = 0
 
         if cdsValue > cdsSetvalue: #조도센서로 불이 꺼진걸 감지하면 
-            print('불이 꺼짐, 동작 감지 시작, 감지 민감도: %d' % contourHuman)
-            print('irLed on')
+            print('불이 꺼짐, 사람 감지 시작, 감지 민감도: %d' % contourHuman)
+            print('적외선 램프 켜짐')
             irledon()
             detectTime1 = time.time()
             while True:
@@ -75,7 +75,7 @@ def sleepDetection():
     if sleepValue == True: 
         time.sleep(3) #정확한 분석을 위한 딜레이 
 
-        print('사람이 잠자는지 수면 감지 판별 start')
+        print('사람이 잠자는지 수면 감지 판별 시작')
         detectTime1 = time.time()
         while True: #5분간 잠자는 공간을 모션 감지하여 사람이 진짜 잠자는지 판별
             print('일정시간 동안 움직임 감지')
@@ -99,7 +99,7 @@ def sleepDetection():
                 return True
             print('조도 값: %d' % light)
             if light < cdsSetvalue: #방안 등이 켜져있는지 검사
-                print('light on, 수면 감지 실패')
+                print('방안 불 켜짐, 수면 감지 실패')
                 break
                 
 
@@ -128,9 +128,9 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
     lump2End = 0
 
     if run == 1:
-        print('수면 패턴 측정 start')
+        print('수면 패턴 측정 시작')
     elif run == 0:
-        print('수면 데이터 분석 start')
+        print('수면 데이터 분석 시작')
         f = open("sleepData.txt", 'r')
     while True:
 
@@ -184,8 +184,8 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 detectCount += 1
                 detectFlag = 1
                 lump1 = 1
-                print('lump1=1')
-                print('lump1Start: %d' % lump1Start)
+                print('동작 묶음 1 기록중')
+                print('동작 묶음 1 기록 시작 시간: %d' % lump1Start)
                 continue 
             elif lump2 == 0 and lump1 == 2: #lump1 기록이 완료되면 lump2를 기록 시작
                 if areaValue > noiseArea:
@@ -195,8 +195,8 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 detectCount += 1
                 detectFlag = 1
                 lump2 = 1
-                print('lump2=1')
-                print('lump2Start: %d' % lump2Start)
+                print('동작 묶음 2 기록중')
+                print('동작 묶음 2 기록 시작 시간' % lump2Start)
                 continue
         elif detectFlag == 1: #lump1, 2가 기록중일때 감지된 동작들을 검사해 lump에 알맞은 정보를 기록한다.
             if timeInterval <= 7:
@@ -224,7 +224,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 if lump1 == 1:
                     if maximumArea > noiseArea or detectCount == 1:
                         lump1 = 0
-                        print('lump1=0')
+                        print('노이즈 제거필터 작동, 동작 묶음 제거')
                         detectCount = 0
                         detectFlag = 0
                         lump1Start = 0
@@ -232,16 +232,16 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                         continue
                     else:
                         lump1 = 2
-                        print('lump1=2')
+                        print('동작 묶음 1 기록 완료')
                         lump1End = time1
-                        print('lump1End: %d' % lump1End)
+                        print('동작 묶음 1 기록 종료 시간: %d' % lump1End)
                         detectCount = 0
                         detectFlag = 0
                         continue
                 elif lump2 == 1:
                     if maximumArea > noiseArea or detectCount == 1:
                         lump2 = 0
-                        print('lump2=0')
+                        print('노이즈 제거필터 작동, 동작 묶음 제거')
                         detectCount = 0
                         detectFlag = 0
                         lump2Start = 0
@@ -252,13 +252,13 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                         lump2End = time1
                         detectCount = 0
                         detectFlag = 0
-                        print('lump2=2')
-                        print('lump2End: %d' % lump2End)
+                        print('동작 묶음 2 기록 완료')
+                        print('동작 묶음 2 기록 종료 시간: %d' % lump2End)
                         
         # 감지된 동작들의 묶음인 lump1, 2가 둘다 기록이 완료되면 묶음간의 시간 간격을 검사해 수면 패턴을 측정 및 기록한다.
         if lump1 == 2 and lump2 == 2: 
             t = int(lump2Start - lump1End)
-            print('lump1End - lump2Start: %d' % t)
+            print('동작 없는 구간 시간 간격: %d' % t)
             if t > deepTime:  #lump1, 2 사이의 시간 간격이 일정 값 이상이면 깊은 잠을 감지
                 if (lump1End - lump1Start) < 60: #노이즈 제거 부분 너무 짧은 시간인 경우
                     writeIndex -= 1
@@ -288,11 +288,11 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                     #수면 패턴 기록 작성, lump2 = lump1
             else: #일정시간 값 이하이면 계속 얕은 잠을 자고 있는 것으로 판단
                 lump2 = 0
-                print('lump2 = 0')
+                print('동작 묶음 2 초기화')
                 detectCount = 0
                 detectFlag = 0
                 lump1End = lump2End
-                print('lump1End : %d' % lump1End)
+                #print('lump1End : %d' % lump1End)
 
 
 
@@ -303,7 +303,7 @@ def main():
         if sleepValue == True:
             print('수면패턴 측정 시작')
             sleepPattern(1)
-            
+            wjson.jsonTotxt()            
             #통신 모듈 작동 부분
             tcpServer.tcpSend()
 
