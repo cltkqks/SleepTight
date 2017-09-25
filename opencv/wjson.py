@@ -36,8 +36,8 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #함�
     #현재날짜 구하기
     #d = datetime.date.today() #한번만 실행 하면 되기에 함수 인자로 넘겨 받음
     
-    name = str(number) + d.strftime('%Y%m%d') + '.json'
-
+    name = 'data/' + str(number) + d.strftime('%Y%m%d') + '.json'
+    nametxt = 'data/' + str(number) + d.strftime('%Y%m%d') + '.txt'
     day = int(d.strftime('%Y%m%d'))
     sleeptime = (currentoldHour*100) +  currentoldMinute
     patterntime = totalMinutes - totaloldMinutes
@@ -49,7 +49,7 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #함�
     print('start_end: %d' % start_end)
     print('patterntime: %d' % patterntime)
     
-    sleepData = {
+    sleepData1 = {
         'day' : day,
         'sleeptime' : sleeptime,
         'sleeppattern' : sleeppattern,
@@ -57,6 +57,17 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #함�
         'patterntime' : patterntime
     }
 
+    sleepData = {
+        "patterntime": patterntime,
+        "start_end": start_end,
+        "sleeppattern": sleeppattern,
+        "day": day,
+        "sleeptime": sleeptime}
+    if patterntime < 10:
+        patterntime = '0' + str(patterntime)
+    else:
+        patterntime = str(patterntime)
+    sleepDatatxt = '{"patterntime": %s, "start_end": %d, "sleeppattern": %d, "day": %d, "sleeptime": %d}' %(patterntime, start_end, sleeppattern, day, sleeptime) 
     jsonString = json.dumps(sleepData)
 
 #    print('\njsonString')
@@ -65,22 +76,24 @@ def writejson(pastTime, currentTime, d, sleeppattern, start_end, number): #함�
     with open(name, 'w') as make_file:
         json.dump(sleepData, make_file, ensure_ascii=False)    
 
+    f = open(nametxt, 'w')
+    f.write(sleepDatatxt)
+    f.close()    
 
-
-def jsonTotxt():
+def jsonTotxt():    #json to TXT file
     f1 = open("json.txt", 'w')
     f1.close()
     f1 = open("json.txt", 'a')
     d = datetime.date.today()
     number = 1
-    f = open(str(number) + d.strftime('%Y%m%d')+'.json', 'r')
+    f = open('data/' + str(number) + d.strftime('%Y%m%d')+'.txt', 'r')
     try:
         while True:
             line = f.readline()
             f.close()
             f1.write(line+'\n')
             number += 1
-            f = open(str(number) + d.strftime('%Y%m%d') + '.json', 'r')
+            f = open('data/' + str(number) + d.strftime('%Y%m%d') + '.txt', 'r')
     except:
         f.close()
 

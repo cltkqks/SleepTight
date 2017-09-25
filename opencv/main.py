@@ -10,6 +10,7 @@ import wjson
 import datetime
 import cv2
 import record
+import tcpServer
 
 deepTime = 950 #깊은잠 판별 시간
 noiseArea = 5000 # 노이즈 판별 크기
@@ -302,8 +303,9 @@ def main():
         if sleepValue == True:
             print('수면패턴 측정 시작')
             sleepPattern(1)
-
+            
             #통신 모듈 작동 부분
+            tcpServer.tcpSend()
 
         elif sleepValue == False:
             print('수면 감지 재시작')
@@ -441,7 +443,8 @@ while True:
             
             
     elif '4' == a:
-        os.system("rm -rf *.json")
+        os.system("rm -rf data/*.json")
+        os.system("rm -rf data/*.txt")
         sleepPattern(0)
         wjson.jsonTotxt()
     elif '0' == a:
