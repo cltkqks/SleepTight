@@ -1,6 +1,7 @@
 #tcp 서버 코드
 #안드로이드로부터 동기화 요청을 받으면 수면 데이터 전송
 import socket
+import time
 
 def tcpSend():
     global s
@@ -31,6 +32,7 @@ def tcpSend():
             print('동기화 시작')
             f = open("json.txt", 'r')
             while True:
+                time.sleep(0.1) #딜레이를 주어 통신이 원활하게 동작하도록 한다.
                 line = f.readline()
                 if not line: 
                     break
@@ -52,6 +54,5 @@ def tcpSend():
         print("연결 종료")
 
 if __name__ == "__main__":
-    
     tcpSend()
     
