@@ -32,7 +32,7 @@ def humanDetection():
         time.sleep(1)
         while cdsCount < 2:
             cdsValue = cds.light(4)
-            print(cdsValue)
+            print('조도 값: %d' % cdsValue)
             cdsCount += 1
 
         cdsCount = 0
@@ -396,12 +396,11 @@ def detectTest():
         print('\nirLed off')
         cds.clean()
     
-                
-
+  
 
 while True:
     print('\n동작 모드 선택')
-    a = input('(1: 수면 패턴 측정, 2: 설정, 3: 동작감지 테스트, 4: 수면 데이터 분석, 0: 종료): ')
+    a = input('(1: 수면 패턴 측정, 2: 설정, 3: 테스트, 4: 수면 데이터 분석, 0: 종료): ')
 
     if '1' == a:
         try:
@@ -430,23 +429,35 @@ while True:
         setUp()
                 
     elif '3' == a:
-        try:
-            print('\n동작 감지 테스트 시작')
-            detectTest()
-            print('\n동작 감지 테스트 종료')
-        except KeyboardInterrupt:
-            if irLedState == '1':
-                irledoff()
-                print('\nirLed off')
-                cds.clean()
-            print('\n동작 감지 테스트 강제종료')
-            
+        while True:
+            print('\n 테스트 동작 선택')
+            b = input('(1: 동작 감지 테스트, 2: CCTV 화면 스트리밍, 0: 종료): ')
+            if '1' == b:
+                try:
+                    print('\n동작 감지 테스트 시작')
+                    detectTest()
+                    print('\n동작 감지 테스트 종료')
+                except KeyboardInterrupt:
+                    if irLedState == '1':
+                        irledoff()
+                        print('\nirLed off')
+                        cds.clean()
+                    print('\n동작 감지 테스트 강제종료')
+            elif '2' == b:
+                c = input('스트리밍 동작 시간 설정(초): ')
+                stream.test(c)
+                print('CCTV 화면 스트리밍 종료')
+            elif '0' == b:
+                break
+            else:
+                print('\n다시 입력해 주세요')
+                pass
             
     elif '4' == a:
-        os.system("rm -rf data/*.json")
-        os.system("rm -rf data/*.txt")
-        sleepPattern(0)
-        wjson.jsonTotxt()
+        os.system("mv data/*.json data/junk") #json 파일 junk폴더로 이동
+        os.system("rm -rf data/*.txt") #txt 파일 삭제
+        sleepPattern(0) #수면 데이터 분석
+        wjson.wjsonTotxt()  #통신에 쓰도록 json.txt 파일에 정보 저장
     elif '0' == a:
         break
     else:
