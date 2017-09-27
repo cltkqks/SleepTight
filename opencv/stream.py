@@ -32,6 +32,17 @@ def video_feed():
 def run():
     app.run(host='0.0.0.0', debug=True)
 
+def test(time):
+    try:
+        server = Process(target=run)
+        server.start()
+        time.sleep(time)
+        server.terminate()
+        server.join()
+    except:
+        server.terminate()
+        server.join()
+
 if __name__ == '__main__':
     try:
         server = Process(target=run)
