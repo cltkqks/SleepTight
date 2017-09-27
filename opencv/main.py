@@ -196,7 +196,7 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
                 detectFlag = 1
                 lump2 = 1
                 print('동작 묶음 2 기록중')
-                print('동작 묶음 2 기록 시작 시간' % lump2Start)
+                print('동작 묶음 2 기록 시작 시간: %d' % lump2Start)
                 continue
         elif detectFlag == 1: #lump1, 2가 기록중일때 감지된 동작들을 검사해 lump에 알맞은 정보를 기록한다.
             if timeInterval <= 7:
