@@ -4,6 +4,7 @@
 import RPi.GPIO as GPIO
 import time
 
+flag = True 
 
 #GPIO.setmode(GPIO.BCM)
 
@@ -49,6 +50,29 @@ def irLedoff(pin):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(pin, GPIO.OUT)
     GPIO.output(pin, GPIO.LOW)
+
+def switch(pin):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(pin, GPIO.FALLING, callback=my_callback, bouncetime=500)    
+
+def my_callback(channel):
+    global flag
+    print("switch pressed")
+    flag = ~flag
+    if flag == 1:
+        while True:
+            print('보안모드 동작중')
+            time.sleep(0.5)
+    else:
+        print('수면감지중')
+
+if __name__ == "__main__":
+    irLedon(21)
+
+
+    
+
 
 #print('on')
 #irLedon(26)
