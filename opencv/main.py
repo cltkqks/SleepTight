@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 #main function code
 
+import RPi.GPIO as GPIO
+import stream
 import os
 import detect
 import cds
@@ -11,29 +13,39 @@ import datetime
 import cv2
 import record
 import tcpServer
+import msg
 
-deepTime = 950 #깊은잠 판별 시간
+deepTime = 600 #깊은잠 판별 시간
 noiseArea = 5000 # 노이즈 판별 크기
 contourHuman = 800 # 모션 감지 민감도 설정-사람 감지
 contourSleep = 400  # 모션 감지 민감도 설정-수면 뒤척임 감지
-cdsSetvalue = 2000 #조도센서 설정값
+cdsSetvalue = 2500 #조도센서 설정값
 dataRecord = 1 #수면 데이터 상세 기록 on(1), off(0) flag
 showWindows = 0 #카메라 영상창 on(1), off(0) flag
 irLedState = '0' # irLed 상태 flag
+modeFlag = True
+
 
 #조도센서로 불이 꺼지는것을 감지하면 사람의 움직임을 감지
 def humanDetection():
-    global cdsSetvalue, contourHuman, showWindows, dataRecord
+    global cdsSetvalue, contourHuman, showWindows, dataRecord, modeFlag
     cdsValue = 0
     cdsCount = 0
     detectNumber = 0
     print('조도 센서 감지')
     while True:
         time.sleep(1)
-        while cdsCount < 2:
-            cdsValue = cds.light(4)
-            print('조도 값: %d' % cdsValue)
-            cdsCount += 1
+        if modeFlag == True:
+            print('수면 패턴 측정 모드 동작중')
+            while cdsCount < 2:
+                cdsValue = cds.light(4)
+                print('조도 값: %d' % cdsValue)
+                cdsCount += 1
+     
+        elif modeFlag == False:
+            print('보안 모드 동작중')
+            detectPerson()
+        
 
         cdsCount = 0
 
@@ -297,7 +309,9 @@ def sleepPattern(run): #인자 - 0: 수면패턴 분석, 1: 수면패턴 측정
 
 
 def main():
+    global modeFlag
     sleepValue = False
+    switch(21)
     while True:
         sleepValue = sleepDetection() # 수면 감지
         if sleepValue == True:
@@ -310,6 +324,33 @@ def main():
         elif sleepValue == False:
             print('수면 감지 재시작')
 
+def detectPerson(): #CCTV 보안모드 동작
+    areaValue = detect.motionDetect(5, contourHuman, showWindows)
+    if areaValue > 800:
+        print('침입자 감지!, 메시지 전송')
+        msg.sendMsg()
+        time.sleep(3)
+    else:
+        print('침입자 없음!')
+
+
+def switch(pin):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(pin, GPIO.FALLING, callback=my_callback, bouncetime=2000)
+
+def my_callback(channel):
+    global modeFlag
+    print('CCTV 모드 변경')
+    if modeFlag == True:
+        modeFlag = False
+        cds.irLedon(20)
+    elif modeFlag == False:
+        cds.irLedoff(20)
+        modeFlag = True
+    else:
+        cds.irLedoff(20)
+        modeFlag = True
 
 def irledon():
     cds.irLedon(14)
@@ -404,6 +445,8 @@ while True:
 
     if '1' == a:
         try:
+            os.system("mv data/*.json data/junk")
+            os.system("rm -rf data/*.txt")
             print('\n')
             if dataRecord == 1:
                 print('수면 데이터 상세 기록 on')
@@ -431,7 +474,7 @@ while True:
     elif '3' == a:
         while True:
             print('\n 테스트 동작 선택')
-            b = input('(1: 동작 감지 테스트, 2: CCTV 화면 스트리밍, 0: 종료): ')
+            b = input('(1: 동작 감지 테스트, 2: CCTV 화면 스트리밍, 3: CCTV 보안모드, 0: 종료): ')
             if '1' == b:
                 try:
                     print('\n동작 감지 테스트 시작')
@@ -445,8 +488,16 @@ while True:
                     print('\n동작 감지 테스트 강제종료')
             elif '2' == b:
                 c = input('스트리밍 동작 시간 설정(초): ')
-                stream.test(c)
+                d = int(c)
+                stream.test(d)
                 print('CCTV 화면 스트리밍 종료')
+            elif '3' == b:
+                try:
+                    while True:
+                        detectPerson()
+                except KeyboardInterrupt:
+                    pass
+                         
             elif '0' == b:
                 break
             else:
