@@ -18,6 +18,7 @@ def index():
 
 def gen(camera):
     while True:
+        time.sleep(0.01)
         frame = camera.get_frame()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
@@ -32,16 +33,7 @@ def video_feed():
 def run():
     app.run(host='0.0.0.0', debug=True)
 
-def test(time):
-    try:
-        server = Process(target=run)
-        server.start()
-        time.sleep(time)
-        server.terminate()
-        server.join()
-    except:
-        server.terminate()
-        server.join()
+
 
 if __name__ == '__main__':
     try:
@@ -50,3 +42,5 @@ if __name__ == '__main__':
     except:
         server.terminate()
         server.join()
+
+
