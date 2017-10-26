@@ -176,4 +176,5 @@ def saveImage(img, sub):
     cv2.imwrite('images/'+ name + '1.jpg', img)
     cv2.imwrite('images/'+ name + '2.jpg', sub)
 
-
+if __name__ == '__main__':
+    motionDetect(-1, 1000, 1)
