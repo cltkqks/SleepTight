@@ -104,9 +104,8 @@ def wjsonTotxt():
         f.close()
 
 
-
-
-
-
-
-
+def backup():
+    d = datetime.date.today()
+    name = 'backup/' + d.strftime('%Y%m%d') + '.txt'
+    f = open("json.txt", 'r')
+    # 백업 내용 나머지
